@@ -13,7 +13,7 @@ goods::goods(double p_stack_x ,double p_stack_y,double p_stack_z,double p_goods_
 {
 	ui->setupUi(this);
 	myGraphicRectItemInstance = nullptr;// 初始化指针
-	connect(ui->create, SIGNAL(clicked()), this, SLOT(on_create_clicked));//生成方案的按钮
+    connect(ui->pushbutton_create, &QPushButton::clicked, this, &goods::on_create_clicked);//生成方案的按钮
 	connect(ui->levelMap, &NewGraphicsView::itemPosSend, this, &goods::updateInfo);//选中物体后在三个lineEdit中更新内容
 	connect(ui->levelMap, &NewGraphicsView::itemChange, this, &goods::InstanceRefresh);//选中物体后修改当前实例指向
 	connect(ui->return_to_level, &QPushButton::clicked, this, &goods::returnToEditMode);
@@ -129,6 +129,7 @@ void goods::changeForVisual(QVector<SingleSKUBpp::LayoutResult>& layout)
         p_layout.y_len= p_layout.y_len*30;
     }
 }
+
 void goods::on_create_clicked()//根据下拉框的内容生成货物排列
 {
 	scene->clear();

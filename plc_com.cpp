@@ -22,23 +22,43 @@ void swapBytes(unsigned char* data, int size) {
 	}
 }
 
- // 检查 PLC 状态
+// 检查 PLC 状态
 int checkPLCStatus()
 {
-    if(!mClient)    return 0;
-    int result = mClient->Connected();
-    return result;
+	if (!mClient)    return 0;
+	// 检查PLC连接状态
+	if (mClient && mClient->Connected()) {
+		return 1;
+	}
+	else {
+		return 0;
+	}
+
 }
 
 // 用于连接plc
 int mSnap7GetDataFromS71200Db(QString IP_config)
 {
-    mClient = new TS7Client;
-    int rag = mClient->ConnectTo(IP_config.toStdString().c_str(), 0, 0);
+	mClient = new TS7Client;
+	int rag = mClient->ConnectTo(IP_config.toStdString().c_str(), 0, 0);
 
-	//delete mClient;
+	delete mClient;
 	return rag;
 }
+
+void disconnectPLC()
+{
+	if (!mClient->Connected()) {
+		qDebug() << "PLC未连接！";
+		return;
+	}
+	qDebug() << "断开连接中！";
+	mClient->Disconnect();
+	if (!mClient->Connected()) {
+		qDebug() << "已断开连接！";
+	}
+}
+
 
 // real转换过程函数
 union AddressToFloat {
@@ -331,7 +351,7 @@ int sqlThread::ThreadSetBox(int DB_num, std::string SKU, float box_len, float bo
 	QVector<SingleSKUBpp::TrayMsql> sku_tray_list(myObject.layout_total_sql.size(), myObject.tray_sql_data);
 
 	emit sqlSendSignal(sku_code_list, myObject.layout_total_sql, sku_tray_list);
-    emit threeDSendSignal(result_LayoutTotalAuto,myObject.tray_sql_data.box_width,myObject.tray_sql_data.box_height);
+	emit threeDSendSignal(result_LayoutTotalAuto, myObject.tray_sql_data.box_width, myObject.tray_sql_data.box_height);
 
 	// 码垛总数量输出
 	int box_total_length = myObject.layout_total_ori.length();
@@ -475,52 +495,52 @@ sqlThread::sqlThread()
 
 void sqlThread::run()
 {
-    static int count_num = 0;
-    while(true)
-    {
-        QVector<QString> sku_code_list;
-        QVector<SingleSKUBpp::LayoutResultMsql> lay_out_list;
-        QVector<SingleSKUBpp::TrayMsql> sku_tray_list;
+	static int count_num = 0;
+	while (true)
+	{
+		QVector<QString> sku_code_list;
+		QVector<SingleSKUBpp::LayoutResultMsql> lay_out_list;
+		QVector<SingleSKUBpp::TrayMsql> sku_tray_list;
 
-        SingleSKUBpp::LayoutResultMsql s1 ={0,1.5,0.5,0,90,0};
-        SingleSKUBpp::LayoutResultMsql s2 ={0,5.5,0.5,0,0,0};
-        SingleSKUBpp::LayoutResultMsql s3 ={0,1.5,5.5,0,0,0};
-        SingleSKUBpp::LayoutResultMsql s4 ={0,6.5,4.5,0,90,0};
-        SingleSKUBpp::LayoutResultMsql s5 ={1,1.5,0.5,3,0,0};
-        SingleSKUBpp::LayoutResultMsql s6 ={1,6.5,0.5,3,90,0};
-        SingleSKUBpp::LayoutResultMsql s7 ={1,1.5,4.5,3,90,0};
-        SingleSKUBpp::LayoutResultMsql s8 ={1,5.5,5.5,3,0,0};
-        SingleSKUBpp::LayoutResultMsql s9 ={2,1.5,0.5,6,90,0};
-        SingleSKUBpp::LayoutResultMsql s10={2,5.5,0.5,6,0,0};
-
-
-        lay_out_list << s1 << s2 << s3 << s4 << s5 << s6<<s7<<s8<<s9<<s10;
-        SingleSKUBpp::TrayMsql tray1 = {12,10,18,100,500,5,4,3,10};
-        for(int i=0;i<10;++i)
-        {
-            sku_code_list<< QString("sku") + QString::number(count_num);
-            sku_tray_list << tray1;
-        }
-        count_num++;
-        QVector<SingleSKUBpp::LayoutResult> layout_r;
-        SingleSKUBpp::LayoutResult r1 ={1.5,0.5,0, 4, 5};
-        SingleSKUBpp::LayoutResult r2 ={5.5,0.5,0, 5, 4};
-        SingleSKUBpp::LayoutResult r3 ={1.5,5.5,0, 5, 4};
-        SingleSKUBpp::LayoutResult r4 ={6.5,4.5,0, 4, 5};
-        SingleSKUBpp::LayoutResult r5 ={1.5,0.5,3, 5, 4};
-        SingleSKUBpp::LayoutResult r6 ={6.5,0.5,3, 4, 5};
-        SingleSKUBpp::LayoutResult r7 ={1.5,4.5,3, 4, 5};
-        SingleSKUBpp::LayoutResult r8 ={5.5,5.5,3, 5, 4};
-        SingleSKUBpp::LayoutResult r9 ={1.5,0.5,6, 4, 5};
-        SingleSKUBpp::LayoutResult r10={5.5,0.5,6, 5, 4};
+		SingleSKUBpp::LayoutResultMsql s1 = { 0,1.5,0.5,0,90,0 };
+		SingleSKUBpp::LayoutResultMsql s2 = { 0,5.5,0.5,0,0,0 };
+		SingleSKUBpp::LayoutResultMsql s3 = { 0,1.5,5.5,0,0,0 };
+		SingleSKUBpp::LayoutResultMsql s4 = { 0,6.5,4.5,0,90,0 };
+		SingleSKUBpp::LayoutResultMsql s5 = { 1,1.5,0.5,3,0,0 };
+		SingleSKUBpp::LayoutResultMsql s6 = { 1,6.5,0.5,3,90,0 };
+		SingleSKUBpp::LayoutResultMsql s7 = { 1,1.5,4.5,3,90,0 };
+		SingleSKUBpp::LayoutResultMsql s8 = { 1,5.5,5.5,3,0,0 };
+		SingleSKUBpp::LayoutResultMsql s9 = { 2,1.5,0.5,6,90,0 };
+		SingleSKUBpp::LayoutResultMsql s10 = { 2,5.5,0.5,6,0,0 };
 
 
-        layout_r<<r1<<r2<<r3<<r4<<r5<<r6<<r7<<r8<<r9<<r10;
-        emit sqlSendSignal(sku_code_list, lay_out_list, sku_tray_list);
-      //  emit threeDSendSignal(layout_r,5,3);
-        sleep(5);
-    }
-    return;
+		lay_out_list << s1 << s2 << s3 << s4 << s5 << s6 << s7 << s8 << s9 << s10;
+		SingleSKUBpp::TrayMsql tray1 = { 12,10,18,100,500,5,4,3,10 };
+		for (int i = 0; i < 10; ++i)
+		{
+			sku_code_list << QString("sku") + QString::number(count_num);
+			sku_tray_list << tray1;
+		}
+		count_num++;
+		QVector<SingleSKUBpp::LayoutResult> layout_r;
+		SingleSKUBpp::LayoutResult r1 = { 1.5,0.5,0, 4, 5 };
+		SingleSKUBpp::LayoutResult r2 = { 5.5,0.5,0, 5, 4 };
+		SingleSKUBpp::LayoutResult r3 = { 1.5,5.5,0, 5, 4 };
+		SingleSKUBpp::LayoutResult r4 = { 6.5,4.5,0, 4, 5 };
+		SingleSKUBpp::LayoutResult r5 = { 1.5,0.5,3, 5, 4 };
+		SingleSKUBpp::LayoutResult r6 = { 6.5,0.5,3, 4, 5 };
+		SingleSKUBpp::LayoutResult r7 = { 1.5,4.5,3, 4, 5 };
+		SingleSKUBpp::LayoutResult r8 = { 5.5,5.5,3, 5, 4 };
+		SingleSKUBpp::LayoutResult r9 = { 1.5,0.5,6, 4, 5 };
+		SingleSKUBpp::LayoutResult r10 = { 5.5,0.5,6, 5, 4 };
+
+
+		layout_r << r1 << r2 << r3 << r4 << r5 << r6 << r7 << r8 << r9 << r10;
+		emit sqlSendSignal(sku_code_list, lay_out_list, sku_tray_list);
+		//  emit threeDSendSignal(layout_r,5,3);
+		sleep(5);
+	}
+	return;
 	ReadDBTempThread();
 
 }

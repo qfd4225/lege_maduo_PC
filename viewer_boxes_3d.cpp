@@ -14,6 +14,8 @@ QImage generateTextureImage(int number, const QSize& size)
 	return image;
 }
 
+
+
 void ini_scene(Qt3DCore::QEntity* rootEntity, Qt3DExtras::Qt3DWindow* view)
 {
 	// Camera
@@ -127,7 +129,7 @@ void createCube(Qt3DCore::QEntity* rootEntity, double length, double width, doub
 	Qt3DCore::QTransform* cuboidTransform = new Qt3DCore::QTransform();
 	cuboidTransform->setTranslation(QVector3D(xPosition, yPosition, zPosition));
 
-    qDebug() << "height_limit="<<height_limit;
+	qDebug() << "height_limit=" << height_limit;
 	if (y == height_limit) {
 		// Create semi-transparent material
 		Qt3DExtras::QPhongMaterial* semiTransparentMaterial = new Qt3DExtras::QPhongMaterial();
@@ -159,17 +161,17 @@ void createCube(Qt3DCore::QEntity* rootEntity, double length, double width, doub
 void createList(Qt3DCore::QEntity* rootEntity, QVector<SingleSKUBpp::LayoutResult> result, int selectlayers, double gweight, double height)
 {
 	for (const auto& pair : result)
-    {
+	{
 		if (selectlayers == 0 || pair.z <= height * (selectlayers - 1))
-        {
-            createCube(rootEntity, pair.x_len, height, pair.y_len, pair.x, pair.z, pair.y, total_weight / gweight + 1);
+		{
+			createCube(rootEntity, pair.x_len, height, pair.y_len, pair.x, pair.z, pair.y, total_weight / gweight + 1);
 			if (pair.z / height > max_layers)
 			{
 				max_layers = pair.z / goods_height;
 			}
 		}
 		total_weight += gweight;
-    }
+	}
 }
 
 bool parameterCheck1()
@@ -535,69 +537,73 @@ void viewerBoxes3D::onReadButtonClicked(QWidget* container, Qt3DCore::QEntity* r
 
 }
 void viewerBoxes3D::onLineEditEditingFinished(double& parameter, QLineEdit* lineEdit) {
-	bool ok;
-	double value = lineEdit->text().toDouble(&ok);
-	if (ok) {
-		parameter = value;
-	}
-	else {
-		// Handle invalid input, you can choose to show a message box or take other actions
-	}
+    bool ok;
+    double value = lineEdit->text().toDouble(&ok);
+    if (ok) {
+        parameter = value;
+    }
+    else {
+        // Handle invalid input, you can choose to show a message box or take other actions
+    }
 }
 
 void viewerBoxes3D::setSelectedData(QList<QStringList> result_list, QList<QStringList> box_list)
 {
 
-    if(result_list.size()<=0 || box_list.size()<=0)
-    {
-        QMessageBox::information(this,"提示","未查询到该sku信息!");
-        return;
-    }
+	if (result_list.size() <= 0 || box_list.size() <= 0)
+	{
+		QMessageBox::information(this, "提示", "未查询到该sku信息!");
+		return;
+	}
 
-    // 重新初始化界面
-    QList<Qt3DCore::QEntity*> childEntities = rootEntity->findChildren<Qt3DCore::QEntity*>();
-    for (Qt3DCore::QEntity* childEntity : childEntities) {
-        delete childEntity;
-    }
+	// 重新初始化界面
+	QList<Qt3DCore::QEntity*> childEntities = rootEntity->findChildren<Qt3DCore::QEntity*>();
+	for (Qt3DCore::QEntity* childEntity : childEntities) {
+		delete childEntity;
+	}
 
-    ini_scene(rootEntity, view);
-    createCube(rootEntity, stack_length, 1, stack_width, 0, -1, 0, 0);
+	ini_scene(rootEntity, view);
+	createCube(rootEntity, stack_length, 1, stack_width, 0, -1, 0, 0);
 
-    auto b_result = box_list[0];
+	auto b_result = box_list[0];
+	QString sku_code = b_result.at(0);
+	double box_length = b_result.at(1).toDouble();
+	double box_width = b_result.at(2).toDouble();
+	double box_height = b_result.at(3).toDouble();
+	double box_weight = b_result.at(4).toDouble();
 
-    QString sku_code = b_result.at(0);
-    double box_length = b_result.at(1).toDouble();
-    double box_width = b_result.at(2).toDouble();
-    double box_height = b_result.at(3).toDouble();
-    double box_weight = b_result.at(4).toDouble();
+    // ui->lengthLineEdit->setText(QString::number(stack_length));
+    // ui->widthLineEdit->setText(QString::number(stack_width));
+    // ui->heightLineEdit->setText(QString::number(height_limit));
+    // ui->outRatioLineEdit->setText(QString::number(out_ratio));
 
-    QVector<SingleSKUBpp::LayoutResult> layout_result;
+	QVector<SingleSKUBpp::LayoutResult> layout_result;
 
-    for(auto p_result : result_list)
-    {
-        SingleSKUBpp::LayoutResult l_r;
+	for (auto p_result : result_list)
+	{
+		SingleSKUBpp::LayoutResult l_r;
 
-        QString sku_code = p_result.at(0);      
-        double x = p_result.at(7).toDouble();
-        double y = p_result.at(8).toDouble();
-        double z = p_result.at(9).toDouble();
-        int box_ori = p_result.at(10).toInt();     
+		QString sku_code = p_result.at(0);
+		double x = p_result.at(7).toDouble();
+		double y = p_result.at(8).toDouble();
+		double z = p_result.at(9).toDouble();
+		int box_ori = p_result.at(10).toInt();
 
-        if(box_ori == 0)
-        {
-            l_r = {x,y,z,box_length,box_width};
-        }
-        else
-        {
-            l_r = {x,y,z,box_width,box_length};
-        }
-        qDebug()<<"layout_P = " << l_r.x<<l_r.y<<l_r.z<<l_r.x_len<<l_r.y_len;
-        layout_result.append(l_r);
+		if (box_ori == 0)
+		{
+			l_r = { x,y,z,box_length,box_width };
+		}
+		else
+		{
+			l_r = { x,y,z,box_width,box_length };
+		}
+		qDebug() << "layout_P = " << l_r.x << l_r.y << l_r.z << l_r.x_len << l_r.y_len;
+		layout_result.append(l_r);
 
-    }
+	}
 
-    createList(rootEntity, layout_result, 0, box_weight, box_height);
-    return;
+	createList(rootEntity, layout_result, 0, box_weight, box_height);
+	return;
 
 }
 
@@ -607,24 +613,24 @@ viewerBoxes3D::viewerBoxes3D(QWidget* parent)
 {
 	ui->setupUi(this);
 	// 1、创建3D场景视图窗口view
-    view = new Qt3DExtras::Qt3DWindow();
-    view->defaultFrameGraph()->setClearColor(QColor(QRgb(0x4d4d4f)));
-    // 2、创建放置3D场景视图窗口的容器，场景view需要先放在一个容器中
-    QWidget* container = QWidget::createWindowContainer(view);
-    QSize screenSize = view->screen()->size();
-    container->setMinimumSize(QSize(200, 100));
-    container->setMaximumSize(screenSize);
-    // 3、创建一个主窗口Widget，进行适当布局操作
+	view = new Qt3DExtras::Qt3DWindow();
+	view->defaultFrameGraph()->setClearColor(QColor(QRgb(0x4d4d4f)));
+	// 2、创建放置3D场景视图窗口的容器，场景view需要先放在一个容器中
+	QWidget* container = QWidget::createWindowContainer(view);
+	QSize screenSize = view->screen()->size();
+	container->setMinimumSize(QSize(200, 100));
+	container->setMaximumSize(screenSize);
+	// 3、创建一个主窗口Widget，进行适当布局操作
 
-    ui->widget_3DViewer->setLayout(new QVBoxLayout());
-    ui->widget_3DViewer->layout()->addWidget(container);
+	ui->widget_3DViewer->setLayout(new QVBoxLayout());
+	ui->widget_3DViewer->layout()->addWidget(container);
 
 
 	// 给应用程序主窗口设置一个标题
 	ui->widget_3DViewer->setWindowTitle(QStringLiteral("Basic shapes"));
 	// 5、创建根实体（Root Entity）对象，即所谓的“画布”，并将其设置到3D场景视图中去
 	// Root entity
-    rootEntity = new Qt3DCore::QEntity();
+	rootEntity = new Qt3DCore::QEntity();
 	view->setRootEntity(rootEntity);
 
 
@@ -634,105 +640,103 @@ viewerBoxes3D::viewerBoxes3D(QWidget* parent)
 
 
 	ui->createCubeButton->setText(QStringLiteral("输入数据")); // 按钮文本
-	// ui->createCubeButton->setDescription(QString::fromLatin1("Please input stack's length,width,height, height limit and goods' length,width,height")); // 按钮描述
 	ui->createCubeButton->setIconSize(QSize(0, 0));
 
-    ui->readSqlButton->setText(QStringLiteral("读取SQL数据")); // 按钮文本
-    ui->readSqlButton->setIconSize(QSize(0, 0));
+	ui->readSqlButton->setText(QStringLiteral("读取SQL数据")); // 按钮文本
+	ui->readSqlButton->setIconSize(QSize(0, 0));
 
-	ui->readFileButton->setText(QStringLiteral("读取数据")); // 按钮文本
-	//	ui->readFileButton->setDescription(QString::fromLatin1("Please input stack's length,width,height, height limit and then I will read goods' length,width,height from your selected xls/xlsx file")); // 按钮描述
+	ui->readFileButton->setText(QStringLiteral("读取全部数据库")); // 按钮文本
 	ui->readFileButton->setIconSize(QSize(0, 0));
 
 
-	ui->lengthLineEdit->setText(QString::number(stack_length));
-	ui->widthLineEdit->setText(QString::number(stack_width));
-	ui->heightLineEdit->setText(QString::number(height_limit));
-	ui->outRatioLineEdit->setText(QString::number(out_ratio));
 
-	QObject::connect(ui->lengthLineEdit, &QLineEdit::editingFinished, [&]() {
-		onLineEditEditingFinished(stack_length, ui->lengthLineEdit);
-		});
-	QObject::connect(ui->widthLineEdit, &QLineEdit::editingFinished, [&]() {
-		onLineEditEditingFinished(stack_width, ui->widthLineEdit);
-		});
-	QObject::connect(ui->heightLineEdit, &QLineEdit::editingFinished, [&]() {
-		onLineEditEditingFinished(height_limit, ui->heightLineEdit);
-		});
-	QObject::connect(ui->goods_length_LineEdit, &QLineEdit::editingFinished, [&]() {
-		onLineEditEditingFinished(goods_length, ui->goods_length_LineEdit);
-		});
-	QObject::connect(ui->goods_width_LineEdit, &QLineEdit::editingFinished, [&]() {
-		onLineEditEditingFinished(goods_width, ui->goods_width_LineEdit);
-		});
-	QObject::connect(ui->goods_height_LineEdit, &QLineEdit::editingFinished, [&]() {
-		onLineEditEditingFinished(goods_height, ui->goods_height_LineEdit);
-		});
-	QObject::connect(ui->outRatioLineEdit, &QLineEdit::editingFinished, [&]() {
-		onLineEditEditingFinished(out_ratio, ui->outRatioLineEdit);
-		});
-	QObject::connect(ui->weightLineEdit, &QLineEdit::editingFinished, [&]() {
-		onLineEditEditingFinished(weight, ui->weightLineEdit);
-		});
-    QObject::connect(this,&viewerBoxes3D::showLayout,[=](QVector<SingleSKUBpp::LayoutResult> layout,double goods_weight,double goods_height){
-        showLayOutResult(rootEntity, view,layout,goods_weight,goods_height);
-    });
 
-    key_edit_dialog = new sqlKeyEditDialog(this);
-    connect(key_edit_dialog,&sqlKeyEditDialog::confirmSignal,[=](QStringList combo_info)
-        {
-        if(combo_info.size() != 6)
-        {
-            QMessageBox::warning(NULL, "提示！", "combo_info.size() != 6",
-                                 QMessageBox::Yes | QMessageBox::No,
-                                 QMessageBox::Yes);
-            return;
-        }
-        QString str_skuCode = combo_info[0];
-        QString str_TrayLength = combo_info[1];
-        QString str_TrayWidth = combo_info[2];
-        QString str_TrayMaxHeight = combo_info[3];
-        QString str_TrayMaxWeight = combo_info[4];
-        QString str_TrayMaxNumber = combo_info[5];
+    QObject::connect(ui->lengthLineEdit, &QLineEdit::editingFinished, [&]() {
+        onLineEditEditingFinished(stack_length, ui->lengthLineEdit);
+        });
+    QObject::connect(ui->widthLineEdit, &QLineEdit::editingFinished, [&]() {
+        onLineEditEditingFinished(stack_width, ui->widthLineEdit);
+        });
+    QObject::connect(ui->heightLineEdit, &QLineEdit::editingFinished, [&]() {
+        onLineEditEditingFinished(height_limit, ui->heightLineEdit);
+        });
+    QObject::connect(ui->goods_length_LineEdit, &QLineEdit::editingFinished, [&]() {
+        onLineEditEditingFinished(goods_length, ui->goods_length_LineEdit);
+        });
+    QObject::connect(ui->goods_width_LineEdit, &QLineEdit::editingFinished, [&]() {
+        onLineEditEditingFinished(goods_width, ui->goods_width_LineEdit);
+        });
+    QObject::connect(ui->goods_height_LineEdit, &QLineEdit::editingFinished, [&]() {
+        onLineEditEditingFinished(goods_height, ui->goods_height_LineEdit);
+        });
+    QObject::connect(ui->outRatioLineEdit, &QLineEdit::editingFinished, [&]() {
+        onLineEditEditingFinished(out_ratio, ui->outRatioLineEdit);
+        });
+    QObject::connect(ui->weightLineEdit, &QLineEdit::editingFinished, [&]() {
+        onLineEditEditingFinished(weight, ui->weightLineEdit);
+        });
+	QObject::connect(this, &viewerBoxes3D::showLayout, [=](QVector<SingleSKUBpp::LayoutResult> layout, double goods_weight, double goods_height) {
+		showLayOutResult(rootEntity, view, layout, goods_weight, goods_height);
+		});
 
-        if (str_skuCode.isEmpty() ||
-            str_TrayLength.isEmpty() ||
-            str_TrayWidth.isEmpty() ||
-            str_TrayMaxHeight.isEmpty() ||
-            str_TrayMaxWeight.isEmpty() ||
-            str_TrayMaxNumber.isEmpty()) {
-            QMessageBox::warning(NULL, "提示！", "请完成信息填写!",
-                                 QMessageBox::Yes | QMessageBox::No,
-                                 QMessageBox::Yes);
-            return;
-        }
+	key_edit_dialog = new sqlKeyEditDialog(this);
+	connect(key_edit_dialog, &sqlKeyEditDialog::confirmSignal, [=](QStringList combo_info)
+		{
+			if (combo_info.size() != 6)
+			{
+				QMessageBox::warning(NULL, "提示！", "combo_info.size() != 6",
+					QMessageBox::Yes | QMessageBox::No,
+					QMessageBox::Yes);
+				return;
+			}
+			QString str_skuCode = combo_info[0];
+			QString str_TrayLength = combo_info[1];
+			QString str_TrayWidth = combo_info[2];
+			QString str_TrayMaxHeight = combo_info[3];
+			QString str_TrayMaxWeight = combo_info[4];
+			QString str_TrayMaxNumber = combo_info[5];
 
-        QMessageBox::StandardButton reply;
-        reply = QMessageBox::question(this, "确认", "请确认操作!",
-                                      QMessageBox::Yes | QMessageBox::No);
-        if (reply == QMessageBox::Yes) {
-            key_edit_dialog->close();
-            QString Sku_Code = str_skuCode;
-            int Tray_Length = str_TrayLength.toInt();
-            int Tray_Width = str_TrayWidth.toInt();
-            int Tray_MaxHeight = str_TrayMaxHeight.toInt();
-            int Tray_MaxWeight = str_TrayMaxWeight.toInt();
-            int Tray_MaxNumber = str_TrayMaxNumber.toInt();
+			if (str_skuCode.isEmpty() ||
+				str_TrayLength.isEmpty() ||
+				str_TrayWidth.isEmpty() ||
+				str_TrayMaxHeight.isEmpty() ||
+				str_TrayMaxWeight.isEmpty() ||
+				str_TrayMaxNumber.isEmpty()) {
+				QMessageBox::warning(NULL, "提示！", "请完成信息填写!",
+					QMessageBox::Yes | QMessageBox::No,
+					QMessageBox::Yes);
+				return;
+			}
 
-            emit getDataSignal(Sku_Code,Tray_Length,Tray_Width,Tray_MaxHeight,Tray_MaxWeight,Tray_MaxNumber);
-        }
-    });
+			QMessageBox::StandardButton reply;
+			reply = QMessageBox::question(this, "确认", "请确认操作!",
+				QMessageBox::Yes | QMessageBox::No);
+			if (reply == QMessageBox::Yes) {
+				key_edit_dialog->close();
+				QString Sku_Code = str_skuCode;
+				int Tray_Length = str_TrayLength.toInt();
+				int Tray_Width = str_TrayWidth.toInt();
+				int Tray_MaxHeight = str_TrayMaxHeight.toInt();
+				int Tray_MaxWeight = str_TrayMaxWeight.toInt();
+				int Tray_MaxNumber = str_TrayMaxNumber.toInt();
+
+				emit getDataSignal(Sku_Code, Tray_Length, Tray_Width, Tray_MaxHeight, Tray_MaxWeight, Tray_MaxNumber);
+			}
+		});
 	// 连接按钮点击事件到槽函数
-    connect(ui->readSqlButton,&QCommandLinkButton::clicked, [=]() {
-        key_edit_dialog->clearForm();
-        key_edit_dialog->exec();
-    });
-
-	QObject::connect(ui->createCubeButton, &QCommandLinkButton::clicked, [=]() {
-		onButtonClicked(rootEntity, view, 0, 0, 0, 0, 0);
+	connect(ui->readSqlButton, &QCommandLinkButton::clicked, [=]() {
+		key_edit_dialog->clearForm();
+		key_edit_dialog->exec();
 		});
+	connect(ui->pushButton_disconnectPLC, &QPushButton::clicked, [=]() {
+		qDebug() << "点击事件";
+		emit disconnectPLCSignal();
+		});
+    QObject::connect(ui->createCubeButton, &QCommandLinkButton::clicked, [=]() {
+        onButtonClicked(rootEntity, view, 0, 0, 0, 0, 0);
+        });
 	QObject::connect(ui->readFileButton, &QCommandLinkButton::clicked, [=]() {
-        emit readSqlSignal();
+		emit readSqlSignal();
 		});
 
 	QObject::connect(ui->pushButton_returnChooseMode, &QPushButton::clicked, this, &viewerBoxes3D::returnChooseMode);
@@ -740,24 +744,26 @@ viewerBoxes3D::viewerBoxes3D(QWidget* parent)
 	this->setFixedSize(1200, 800);
 }
 
-void viewerBoxes3D::showLayOutResult(Qt3DCore::QEntity* rootEntity, Qt3DExtras::Qt3DWindow* view, QVector<SingleSKUBpp::LayoutResult> layout,double goods_weight,double goods_height)
+void viewerBoxes3D::showLayOutResult(Qt3DCore::QEntity* rootEntity, Qt3DExtras::Qt3DWindow* view, QVector<SingleSKUBpp::LayoutResult> layout, double goods_weight, double goods_height)
 {
-    if(this->isHidden()==true)
-    {return;}
-    for(auto lay : layout) {
-        qDebug()<<"lay.x="<<lay.x;
-        qDebug()<<"lay.y="<<lay.y;
-        qDebug()<<"lay.x_len="<<lay.x_len;
-        qDebug()<<"lay.y_len="<<lay.y_len;
-        qDebug()<<"lay.z="<<lay.z;
-    }
-    QList<Qt3DCore::QEntity*> childEntities = rootEntity->findChildren<Qt3DCore::QEntity*>();
-    for (Qt3DCore::QEntity* childEntity : childEntities) {
-        delete childEntity;
-    }
-    ini_scene(rootEntity, view);
-    createCube(rootEntity, 12, 1, 10, 0, -1, 0, 0);
-    createList(rootEntity, layout, 0, goods_weight, goods_height);
+	if (this->isHidden() == true)
+	{
+		return;
+	}
+	for (auto lay : layout) {
+		qDebug() << "lay.x=" << lay.x;
+		qDebug() << "lay.y=" << lay.y;
+		qDebug() << "lay.x_len=" << lay.x_len;
+		qDebug() << "lay.y_len=" << lay.y_len;
+		qDebug() << "lay.z=" << lay.z;
+	}
+	QList<Qt3DCore::QEntity*> childEntities = rootEntity->findChildren<Qt3DCore::QEntity*>();
+	for (Qt3DCore::QEntity* childEntity : childEntities) {
+		delete childEntity;
+	}
+	ini_scene(rootEntity, view);
+	createCube(rootEntity, 12, 1, 10, 0, -1, 0, 0);
+	createList(rootEntity, layout, 0, goods_weight, goods_height);
 }
 void viewerBoxes3D::onButtonClicked(Qt3DCore::QEntity* rootEntity, Qt3DExtras::Qt3DWindow* view, int model, double length, double width, double height, double gweight)
 {
@@ -775,23 +781,23 @@ void viewerBoxes3D::onButtonClicked(Qt3DCore::QEntity* rootEntity, Qt3DExtras::Q
 		delete childEntity;
 	}
 
-    ini_scene(rootEntity, view);
+	ini_scene(rootEntity, view);
 	createCube(rootEntity, stack_length, 1, stack_width, 0, -1, 0, 0);
 	//createCube(rootEntity,stack_length*1.5,0.1,stack_width*1.5,-stack_length*0.5,height_limit,-stack_width*0.5);
 	// 调用 createCube 函数生成长方体
 	//createCube(goods_length, goods_width,goods_height,0, 0, 0);
     double maxWeight = QString(ui->totalweightLineEdit->text()).toDouble();
-    SingleSKUBpp myObject(stack_length, stack_width, height_limit,maxWeight, length, width, height, gweight, out_ratio);
+	SingleSKUBpp myObject(stack_length, stack_width, height_limit, maxWeight, length, width, height, gweight, out_ratio);
 
 	QVector<SingleSKUBpp::LayoutResult> result = myObject.LayoutTotalAuto();
-    for (auto p_result:result)
-    {
-        qDebug()<<"p_result="<<p_result.x<<p_result.y<<p_result.z<<p_result.x_len<<p_result.y_len;
-    }
+	for (auto p_result : result)
+	{
+		qDebug() << "p_result=" << p_result.x << p_result.y << p_result.z << p_result.x_len << p_result.y_len;
+	}
 	createList(rootEntity, result, 0, gweight, height);
-    qDebug()<<"gweight="<<gweight;
-    qDebug()<<"height="<<height;
-	ui->totalweightLineEdit->setText(QString::number(total_weight));
+	qDebug() << "gweight=" << gweight;
+    qDebug() << "height=" << height;
+    ui->totalweightLineEdit->setText(QString::number(total_weight));
 
 	return;
 }

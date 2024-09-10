@@ -39,7 +39,6 @@ MainWindow::MainWindow(QWidget* parent)
 
     connect(set_stack_widget, &OfflineShowDialog::returnToMain, this, &MainWindow::stackToMain);
     connect(set_stack_widget, &OfflineShowDialog::returnToModeChoose, this, &MainWindow::stackToModeChoose);
-
     connect(set_stack_widget, &OfflineShowDialog::updateSql,[=](OfflineShowDialog::KeyStruct key,QList<OfflineShowDialog::ValueStruct> values){
         QString code = key.sku_code;
         int Tray_Length = key.tray_Length;
@@ -65,7 +64,7 @@ MainWindow::MainWindow(QWidget* parent)
 
 	connect(view_boxes_3d, &viewerBoxes3D::returnHome, this, &MainWindow::view3dToMain);
 	connect(view_boxes_3d, &viewerBoxes3D::returnChooseMode, this, &MainWindow::view3dToModeChoose);
-
+    connect(view_boxes_3d, &viewerBoxes3D::disconnectPLCSignal,this,[=](){qDebug()<<"开始断开连接!";disconnectPLC();});
 
     connect(view_boxes_3d, &viewerBoxes3D::readSqlSignal, [=](){
         sql_show_widget->show();
@@ -147,8 +146,8 @@ MainWindow::MainWindow(QWidget* parent)
     statusTimer = new QTimer(this);
     connect(statusTimer, &QTimer::timeout, [=]() mutable
             {
-            // int plc_connect_status = checkPLCStatus();
-            // qDebug()<<"plc连接状态:"<<plc_connect_status;
+            int plc_connect_status = checkPLCStatus();
+            qDebug()<<"plc连接状态:"<<plc_connect_status;
     });
     statusTimer->start(1000); // 5000 毫秒 = 5 秒
 }
@@ -166,6 +165,7 @@ void MainWindow::connectPlc(QString ip_key)
 
     QTimer* timer = new QTimer(this);
     connect(timer, &QTimer::timeout, [=]() mutable {
+
         // 连接PLC
         int rag = mSnap7GetDataFromS71200Db(current_ip);
         if (rag == 0) {

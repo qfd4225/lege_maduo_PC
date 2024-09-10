@@ -65,6 +65,10 @@ private:
     int Tray_MaxWeight;
     int Tray_MaxNumber;
     bool isIndexing = false;
+
+    void create_Form(QString currentContent,KeyStruct p_Key);
+
+    QList<int> getComboBoxValues(QComboBox *comboBox);
 signals:
     void updateSql(KeyStruct key,QList<OfflineShowDialog::ValueStruct> values);
 	void returnToMain();

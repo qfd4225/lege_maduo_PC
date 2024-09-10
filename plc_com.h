@@ -20,6 +20,8 @@ extern int box_address_len;
 const QString SKU_code;
 
 // 链接函数
+
+void disconnectPLC();
 int mSnap7GetDataFromS71200Db(QString IP_config);
 int checkPLCStatus();
 float ReadReal(int address_data[]);

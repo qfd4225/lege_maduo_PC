@@ -73,6 +73,7 @@ signals:
     void returnHome();
     void returnChooseMode();
     void readSqlSignal();
+    void disconnectPLCSignal();
     void getDataSignal(QString Sku_Code,int Tray_Length,int Tray_Width,int Tray_MaxHeight,int Tray_MaxWeight,int Tray_MaxNumber);
 private:
     void showLayOutResult(Qt3DCore::QEntity* rootEntity, Qt3DExtras::Qt3DWindow* view, QVector<SingleSKUBpp::LayoutResult> layout,double goods_weight,double goods_height);

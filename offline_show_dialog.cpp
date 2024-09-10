@@ -72,6 +72,27 @@ OfflineShowDialog::OfflineShowDialog(QWidget* parent)
 		button->setAutoDefault(false);
     }
 
+    connect(ui->pushButton_setAll,&QPushButton::clicked,[=]() {
+        QString current_text = ui->ComboBox_selectPlan->currentText();
+
+        QString sku_code = ui->label_sku->text();
+        int tray_Lenght = ui->label_Tray_Length->text().toInt();
+        int tray_With = ui->label_Tray_Width->text().toInt();
+        int tray_MaxHeight = ui->label_Tray_MaxHeight->text().toInt();
+        int tray_MaxWeight = ui->label_Tray_MaxWeight->text().toInt();
+        int tray_MaxNumber = ui->label_Tray_MaxNumber->text().toInt();
+        QList<int> floornums = getComboBoxValues(ui->comboBox_floornumbers);
+         qDebug()<<"floornums="<<floornums;
+        for(int floornum:floornums)
+        {
+            KeyStruct c_Key{
+                sku_code,tray_Lenght,tray_With, tray_MaxHeight,tray_MaxWeight,tray_MaxNumber, floornum
+            };
+
+            create_Form(current_text,c_Key);
+        }
+
+    });
     connect(ui->comboBox_floornumbers, &QComboBox::currentIndexChanged, this,
         [=](int index){
             if(ui->comboBox_floornumbers->currentText().isEmpty())
@@ -167,6 +188,120 @@ OfflineShowDialog::~OfflineShowDialog()
 
 
 
+QList<int> OfflineShowDialog::getComboBoxValues(QComboBox* comboBox) {
+    // 获取条目数量
+    int itemCount = comboBox->count();
+    QList<int> values;
+    // 遍历所有条目
+    for (int i = 0; i < itemCount; ++i) {
+        // 获取条目的文本
+        QString text = comboBox->itemText(i);
+        if (text.isEmpty())
+        {
+            continue;
+        }
+        // 将文本转换为整数
+        bool ok;
+        int value = text.toInt(&ok);
+
+        // 检查转换是否成功
+        if (ok) {
+            values.append(value);
+        }
+    }
+    return values;
+}
+
+void OfflineShowDialog::create_Form(QString currentContent,KeyStruct p_Key)
+{
+    //  disconnect(this, &goods::updateMyGraphicRectItem, myGraphicRectItemInstance, &myGraphicRectItem::updateFromLineEdit);
+
+    double boxLength =ui->label_len->text().toDouble();
+    double boxWidth =ui->label_wid->text().toDouble();
+    double boxHeight = ui->label_hei->text().toDouble();
+    double boxWeight = ui->label_wei->text().toDouble();
+
+    SingleSKUBpp* skuObject = new SingleSKUBpp(p_Key.tray_Length, p_Key.tray_Width, p_Key.tray_MaxHeight,p_Key.tray_MaxWeight,
+                                               boxLength, boxWidth, boxHeight, boxWeight,
+                                               0.0,p_Key.tray_MaxNum);
+
+    QVector<SingleSKUBpp::LayoutResult> lay_result;
+    if (currentContent == "行模式")
+    {
+        qDebug()<<"1";
+        lay_result = skuObject->HorizontalLayout(p_Key.tray_Length, p_Key.tray_Width, p_Key.floor_num + 1 , 1000);
+    }
+    else if (currentContent == "列模式")
+    {
+        lay_result = skuObject->VerticalLayout(p_Key.tray_Length, p_Key.tray_Width, p_Key.floor_num + 1, 1000);
+    }
+    else if (currentContent == "纵横模式")
+    {
+        lay_result = skuObject->CrossLayout(p_Key.tray_Length, p_Key.tray_Width, p_Key.floor_num + 1, 1000);
+    }
+    else if (currentContent == "单回字模式")
+    {
+        lay_result = skuObject->SingleRectangularLayout(p_Key.tray_Length, p_Key.tray_Width, p_Key.floor_num + 1, 1000);
+    }
+    else if (currentContent == "多回字模式")
+    {
+        lay_result = skuObject->MutiRectangularLayout(p_Key.tray_Length, p_Key.tray_Width, p_Key.floor_num + 1, 1000);
+    }
+    else if (currentContent == "镜像回字模式")
+    {
+        lay_result = skuObject->MutiRectangularLayoutMirror(p_Key.tray_Length, p_Key.tray_Width, p_Key.floor_num + 1, 1000);
+    }
+    else
+    {
+        QMessageBox::warning(this, "警告", "模式选择错误！");
+        return;
+    }
+
+    // 确认操作
+    // QMessageBox::StandardButton reply;
+    // reply = QMessageBox::question(this, "确认", "请确认操作!",
+    //                               QMessageBox::Yes | QMessageBox::No);
+    // if (reply != QMessageBox::Yes) {return;}
+
+    if(lay_result.size()>0)     // 更新至sql
+    {
+        qDebug()<<"更新至sql1";
+        QString sku_code = ui->label_sku->text();
+        int tray_Lenght = ui->label_Tray_Length->text().toInt();
+        int tray_With = ui->label_Tray_Width->text().toInt();
+        int tray_MaxHeight = ui->label_Tray_MaxHeight->text().toInt();
+        int tray_MaxWeight = ui->label_Tray_MaxWeight->text().toInt();
+        int tray_MaxNumber = ui->label_Tray_MaxNumber->text().toInt();
+
+        QList<OfflineShowDialog::ValueStruct> p_values;
+
+        for(const auto &p_layout:lay_result)
+        {
+            qDebug()<<"更新至sql2";
+            OfflineShowDialog::ValueStruct p_value;
+            if (isApproximatelyEqual(p_layout.x_len, boxLength) && isApproximatelyEqual(p_layout.y_len, boxWidth)) {
+                p_value = { p_layout.x,p_layout.y,p_layout.z,0,0};
+                qDebug()<<"0";
+            }
+            else
+            {
+                p_value = { p_layout.x,p_layout.y,p_layout.z,90,0};
+                qDebug()<<"90";
+            }
+
+            p_values.append(p_value);
+        }
+        qDebug()<<"p_value="<<p_values.size();
+        emit updateSql(p_Key,p_values);
+
+        QTimer::singleShot(100, [=](){
+            qDebug()<<"更新至sql3";
+            emit getDataSignal(sku_code,tray_Lenght,tray_With,tray_MaxHeight,tray_MaxWeight,tray_MaxNumber);
+        });
+    }
+}
+
+
 void OfflineShowDialog::setSelectedData(QList<QStringList> result_list, QList<QStringList> box_list)
 {
     if(isIndexing)
@@ -214,7 +349,7 @@ void OfflineShowDialog::setSelectedData(QList<QStringList> result_list, QList<QS
     ui->label_Tray_MaxWeight->setText(QString::number(Tray_MaxWeight));
     ui->label_Tray_Width->setText(QString::number(Tray_Width));
 
-    QVector<int> sorted_list = floor_num_list.values();
+    QVector<int> sorted_list  = floor_num_list.values();
     std::sort(sorted_list.begin(), sorted_list.end());
 
     QString  Current_Floor = "";
